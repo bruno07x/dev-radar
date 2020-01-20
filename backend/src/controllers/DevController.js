@@ -2,6 +2,7 @@
 const axios = require('axios');
 const Dev = require('../models/Dev');
 const parseStringToArray = require('../helpers/parseStringToArray');
+const { findConnections, sendMessage } = require('../webSocket');
 module.exports = {
     // Como a requisição da API pode demorar usa-se o async
     async index (request, response){
@@ -26,6 +27,7 @@ module.exports = {
             // Destruction pegando os dados da API do github
             const { name = login, avatar_url, bio } = apiResponse.data;
             console.log(name, avatar_url, bio, github_username, techsArray, latitude, longitude );
+
             // Gravando dados no DB
             responseDB = await Dev.create({
                 name : name,
@@ -35,6 +37,11 @@ module.exports = {
                 techs: techsArray,
                 location : location
             });
+            // Filtrar conexões que estão a 10km e técnologias  similares
+            const sendSocketMessageTo = findConnections(
+                {latitude, longitude}, techsArray,
+            )
+            sendMessage(sendSocketMessageTo, 'new-dev', responseDB);
         }
         return response.json(responseDB);
     }

@@ -4,16 +4,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 // Requisição de arquivo routes.js criado
 const routes = require('../src/routes');
+const { setupWebsocket } = require('./webSocket');
+const http = require('http');
+const cors = require('cors');
+// Função express()
+const app = express();
+
+// Habilitando HTTP fora do Express
+const server = http.Server(app);
+setupWebsocket(server);
+
 // Conexao com servidor mongodb Atlas
 mongoose.connect('mongodb+srv://bcouto:b1c7o3u2to@cluster0-vrw2c.mongodb.net/week10?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
-// Função express()
-const app = express();
+
 // Habilitando Express para entender formato json
 app.use(express.json());
-
+app.use(cors());
 app.use(routes);
 // Parâmetro 1 = Rota, Paramêtro 2 = Function com parâmetros de resquest & response
 // Query Params acessado através do => resquest.query
@@ -44,4 +53,4 @@ app.post('/user', (request, response) => {
         message: 'Uso de parâmetros Express => body',
     });
 });
-app.listen(3333);
+server.listen(3333);
